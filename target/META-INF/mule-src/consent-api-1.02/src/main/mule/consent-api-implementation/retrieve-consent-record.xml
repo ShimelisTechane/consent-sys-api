@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	
+		<flow name="get:\consent:consent-config" doc:id="9bbed1be-ee3c-4dc5-bed7-0802b1af4dff">
+		<ee:transform doc:name="Transform Message" doc:id="a07fac31-4917-4648-a788-c91d477acb68" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="client_id" ><![CDATA[attributes.headers.client_id]]></ee:set-variable>
+				<ee:set-variable variableName="client_secret" ><![CDATA[attributes.headers.client_secret]]></ee:set-variable>
+				<ee:set-variable variableName="SCA_ID" ><![CDATA[attributes.queryParams.SCA_ID]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<salesforce:query doc:name="Query" doc:id="63c347d8-441f-42d8-9e35-e2e25984fa35" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[SELECT code__c,country__c,created__c,description__c,endDate__c,Individual__c,lastSynchedDate__c,Name,startDate__c FROM Usage__c WHERE Name = ':id']]></salesforce:salesforce-query>
+			<salesforce:parameters ><![CDATA[#[{
+	id: vars.SCA_ID
+}]]]></salesforce:parameters>
+		</salesforce:query>
+		<choice doc:name="Consent data exists with the same ID?" doc:id="d0dfedfe-9fa0-49dc-8cbf-6c430b5f00ad" >
+			<when expression="#[!isEmpty(payload)]">
+				<ee:transform doc:name="Transform Message" doc:id="29ac4747-8b7d-47ea-b40c-a5a49837fd44" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( value , index ) -> {
+	code: value.code__c default "",
+	description: value.description__c default "",
+	startDate: value.startDate__c as String default "",
+	endDate: value.endDate__c as String default "",
+	individual: value.Individual__c default "",
+	country: value.country__c default "",
+	created: value.created__c as String default "",
+	lastSynchedDate: value.lastSynchedDate__c as String default "",
+	SCAID: value.Name default ""
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-payload value="#[payload]" doc:name="Consent data response" doc:id="2cf95411-4c87-4ddf-be22-2051fe153956" />
+				<logger level="INFO" message='#["consent record found with "++ vars.SCA_ID as String]' doc:name="Consent data response console"/>
+			</when>
+			<otherwise >
+				<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	"message": "No consent record found with SCA ID, "++ vars.SCA_ID as String&#10;}]' doc:name="No record response" doc:id="66f619b1-146f-42e7-97a9-09a0a2cf17e3" />
+				<logger level="INFO" doc:name="No record response console" doc:id="38779e9a-0ec9-4ea1-9c7c-c52a739068ff" message='#["No consent record found with "++ vars.SCA_ID as String]'/>
+			</otherwise>
+		</choice>
+		<error-handler ref="global-config-error-handler" />
+	</flow>
+	</mule>

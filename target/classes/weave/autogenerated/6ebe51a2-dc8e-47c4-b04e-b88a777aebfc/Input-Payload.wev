@@ -1,0 +1,14 @@
+%dw 2.0
+
+type auto_6ebe51a2_dc8e_47c4_b04e_b88a777aebfc_Input_Payload = {
+  country?: String, 
+  code?: String, 
+  lastSynchedDate?: String, 
+  endDate?: String, 
+  created?: String, 
+  description?: String, 
+  SCAID?: String, 
+  startDate?: String, 
+  _?: Any
+}
+

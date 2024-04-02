@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+   
+    <flow name="consent-main">
+        <http:listener path="/api/*" config-ref="consent-httpListenerConfig">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="consent-config"/>
+		<error-handler ref="global-config-error-handler" />
+    </flow>
+    <flow name="consent-console">
+        <http:listener path="/console/*" config-ref="consent-httpListenerConfig">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="consent-config"/>
+		<error-handler ref="global-config-error-handler" />
+    </flow>
+    <flow name="update-consent-record">
+        <ee:transform doc:name="Transform Message">
+            <ee:variables>
+                <ee:set-variable variableName="SCA_ID">attributes.uriParams.'SCA_ID'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="Flow Reference" doc:id="a0469968-a55e-40ba-8b56-6451865affc3" name="patch:\consent\(SCA_ID):consent-config"/>
+		<logger level="INFO" message="patch:\consent\(SCA_ID):consent-config" />
+    </flow>
+	<flow name="retrieve-consent-record">
+        <logger level="INFO" message="get:\consent:consent-config" />
+		<flow-ref doc:name="Flow Reference" doc:id="8f47f9c0-5f4d-4c57-a397-5b147f595b25" name="get:\consent:consent-config"/>
+    </flow>
+    <flow name="create-new-consent-record" doc:id="ae0d2e8c-db9b-4c31-9428-d61128167d34">
+        <logger level="INFO" message="post:\consent:application\json:consent-config" />
+		<flow-ref doc:name="Flow Reference" doc:id="daf5a4b6-95ca-4471-bd3b-1ba8e62c3bda" name="post:\consent:application\json:consent-config"/>
+    </flow>
+</mule>

@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_9bbed1be_ee3c_4dc5_bed7_0802b1af4dff_Output_Payload = Array<{|  code: String {"typeId": "code__c"},   description: String {"typeId": "description__c"},   startDate: String,   endDate: String,   individual: String {"typeId": "Individual__c"},   country: String {"typeId": "country__c"},   created: String,   lastSynchedDate: String,   SCAID: String {"typeId": "Name"}|}> | {| message: String |}
+

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+		<flow name="post:\consent:application\json:consent-config" doc:id="6ebe51a2-dc8e-47c4-b04e-b88a777aebfc">
+		<logger level="INFO" doc:name="Logger" doc:id="a1bf0266-2916-4974-abf7-cf386b34bf91" message="post:\consent:application\json:consent-config"/>
+		<ee:transform doc:name="Transform Message" doc:id="b4c4102e-71c6-43bf-941e-c6878a44f7fa">
+			<ee:message>
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map(value, index) -> 
+{
+	code__c: value.code,
+	country__c: value.country default "",
+	created__c: value.created default "",
+	description__c: value.description default "",
+	endDate__c: value.endDate default "",
+	individual__c: lookup('individual', { SCAID: value.SCAID }, 100000),
+	lastSynchedDate__c: value.lastSynchedDate default "",
+	Name: value.SCAID,
+	startDate__c: value.startDate default ""
+}]]></ee:set-payload>
+
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="client_id"><![CDATA[attributes.headers.client_id]]></ee:set-variable>
+				<ee:set-variable variableName="client_secret"><![CDATA[attributes.headers.client_secret]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<!-- [STUDIO:"Insert"]<db:insert doc:name="Insert" doc:id="feaec5e4-3271-4b3a-9ee3-06ef2fb61e30" config-ref="Database_Config">
+					<db:sql><![CDATA[insert into cpconsent_table values (:code__c, :description__c, :startDate__c, :endDate__c, :individual__c, :country__c, :created__c, :lastSynchedDate__c, :Name)&#93;&#93;></db:sql>
+					<db:input-parameters><![CDATA[#[vars.data&#93;&#93;&#93;></db:input-parameters>
+				</db:insert> [STUDIO] -->
+		<until-successful maxRetries="5" doc:name="Until Successful" doc:id="1827345f-56fc-4909-8273-5d79296181dc" >
+			<salesforce:create doc:name="Create" doc:id="f0224d37-fbef-4d38-a4ba-05272e4d3ddb" config-ref="Salesforce_Config" type="Consent__c">
+
+				</salesforce:create>
+		</until-successful>
+		<choice doc:name="Choice" doc:id="87801e56-ad3b-45c7-905a-6be019d4d506">
+			<when expression="#[payload.successful == false]">
+				<ee:transform doc:name="Transform Message" doc:id="1261b0b7-b4fb-4341-9f3f-b665000d13d3">
+					<ee:message>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="errorResponse" ><![CDATA[%dw 2.0
+output application/json
+---
+payload.items filter ($.successful == false) map {
+	"status": $.statusCode,
+	"message": $.message,
+	"description": $.payload.errors.message
+}]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="3e84fa1b-3093-4c11-a30f-c74a9dbc6666" message="#[vars.errorResponse]" />
+			</when>
+		</choice>
+		<choice doc:name="Choice" doc:id="f51beb6a-053c-4c9c-9418-b596b3608a4e">
+			<when expression="#[sizeOf(payload.items filter($.successful == true)) &gt; 0]">
+				<ee:transform doc:name="Transform Message" doc:id="0b523f28-87b0-4f15-bcb8-fca31053fa64">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	status: 201,
+	message: "Consent Created",
+	timestamp: now(),
+	transcationId: correlationId,
+	id: payload.items filter($.successful == true) map ($.id)
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-payload value="#[payload]" doc:name="Consent created response" doc:id="12491118-1691-4bce-9489-948ec8e3e8de" />
+			</when>
+			<otherwise>
+				<set-payload value="#[vars.errorResponse]" doc:name="Set Payload" doc:id="e1d675a2-c02a-43f4-8779-31806d2a86f1" />
+				<remove-variable doc:name="Remove Variable" doc:id="7896a15f-a0b7-41db-89aa-7e58c37b489a" variableName="errorResponse"/>
+				<logger level="INFO" message="#[payload]" doc:name="Consent created response console" />
+			</otherwise>
+		</choice>
+		<error-handler ref="global-config-error-handler">
+			
+		</error-handler>
+	</flow>
+	
+	</mule>

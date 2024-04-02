@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="individual" doc:id="8078300e-b5af-4b4c-a7c0-5ac80092f3fd" >
+		<db:select doc:name="Select" doc:id="66f8583f-812f-4f11-985b-16bf22590918" config-ref="Database_Config" target="dbResult">
+			<db:sql ><![CDATA[select individual_id from individual where SCA_ID=:SCAID]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	SCAID: payload.SCAID[0]
+}]]]></db:input-parameters>
+		</db:select>
+		<set-payload value='#[vars.dbResult.individual_id[0]]' doc:name="Set Payload" doc:id="4465bd4f-58a9-4207-a0c5-a2c714a71ea0" />
+		<logger level="INFO" doc:name="Logger" doc:id="86f59c7f-d50f-4751-a698-fe76389bda24" message="#[payload]"/>
+	</flow>
+
+	</mule>

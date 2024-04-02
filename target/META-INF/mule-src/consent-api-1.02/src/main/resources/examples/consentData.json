@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "startDate": {
+      "type": "string"
+    },
+    "endDate": {
+      "type": "string"
+    },
+    "individual": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string"
+    },
+    "created": {
+      "type": "string"
+    },
+    "lastSynchedDate": {
+      "type": "string"
+    },
+    "SCAID": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "code",
+    "description",
+    "startDate",
+    "endDate",
+    "country",
+    "created",
+    "lastSynchedDate",
+    "SCAID"
+  ]
+}

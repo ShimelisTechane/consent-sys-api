@@ -1,0 +1,12 @@
+{
+  "Name": "SCA98765",
+  "code__c": "SCA001",
+  "description__c": "SCA Identification",
+  "startDate__c": "2023-11-15",
+  "endDate__c": "2023-12-15",
+  "individual__c": "individual",
+  "country__c": "US",
+  "created__c": "2023-11-15 08:55:34",
+  "lastSynchedDate__c": "2023-11-15 08:55:34"
+  
+}
