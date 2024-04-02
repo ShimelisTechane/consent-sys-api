@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	 <http:listener-config name="consent-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="consent-config" api="resource::565eedac-0b3d-4486-8eee-db9a0918ec8a:consent:1.0.3:oas:zip:consent.yaml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    
+	<configuration-properties
+		doc:name="Configuration properties"
+		doc:id="79b9b9bb-8048-4350-afb5-1d2def5853b5"
+		file="config-file\config-properties.yaml" />
+	<validation:config name="Validation_Config"
+		doc:name="Validation Config"
+		doc:id="9422c998-0469-4ccb-8feb-d0a0f4919f2d" />
+	<salesforce:sfdc-config name="Salesforce_Config"
+		doc:name="Salesforce Config"
+		doc:id="26955702-b93f-4867-8e4d-d2ec28fde51e" fetchAllApexSoapMetadata="true" fetchAllApexRestMetadata="true">
+		<salesforce:basic-connection
+			username="shimebet1313@gmail.com" password="Onegod@1234"
+			securityToken="9ZxFyYS9C3YWR42MiNHCV3qkf"/>
+	</salesforce:sfdc-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="4aecfbf1-7c23-4bc6-86a0-db8f192541b0" >
+		<db:my-sql-connection host="${db.host}" port="${db.port}" user="${db.user}" password="${db.password}" database="${db.database}" />
+	</db:config>
+</mule>

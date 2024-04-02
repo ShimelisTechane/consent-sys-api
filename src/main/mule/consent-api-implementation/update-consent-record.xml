@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:json="http://www.mulesoft.org/schema/mule/json"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	
+		<flow name="patch:\consent\(SCA_ID):consent-config" doc:id="e447ab0c-4709-4e63-bb4e-9bc12af35f4d">
+		<ee:transform doc:name="Transform Message" doc:id="8587c003-65ca-4483-aefd-e4a467c3577d">
+			<ee:message >
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="SCA_ID"><![CDATA[attributes.uriParams.'SCA_ID'
+				]]></ee:set-variable>
+				<ee:set-variable variableName="client_id" ><![CDATA[attributes.headers.client_id]]></ee:set-variable>
+				<ee:set-variable variableName="client_secret" ><![CDATA[attributes.headers.client_secret]]></ee:set-variable>
+				<ee:set-variable variableName="data" ><![CDATA[%dw 2.0
+output application/java
+---
+[{
+	Name: payload.SCAID,
+	code__c: payload.code,
+	description__c: payload.description default "",
+	startDate__c: payload.startDate default "",
+	endDate__c: payload.endDate default "",
+	individual__c: lookup('individual', { SCAID: payload.SCAID }, 100000),
+	country__c: payload.country default "",
+	created__c: payload.created default "",
+	lastSynchedDate__c: payload.lastSynchedDate default ""
+	
+}]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<salesforce:query doc:name="Query" doc:id="7c5eb47f-b2ad-4a2c-89d6-a77dba60c5d1" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[SELECT Id, code__c,country__c,created__c,description__c,endDate__c,Individual__c,lastSynchedDate__c,Name,startDate__c FROM Usage__c WHERE Name = ':id']]></salesforce:salesforce-query>
+			<salesforce:parameters ><![CDATA[#[{
+	id: vars.SCA_ID
+}]]]></salesforce:parameters>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="4deddb33-ba0a-4c28-9eff-a535de77238e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[{
+	Id: payload.Id,
+	code__c: vars.data.code__c,
+	country__c: vars.data.country__c default "",
+	created__c: vars.data.created__c default "",
+	description__c: vars.data.description__c default "",
+	endDate__c: vars.data.endDate__c default "",
+	individual__c: vars.data.individual__c,
+	lastSynchedDate__c: vars.data.lastSynchedDate__c default "",
+	Name: vars.data.Name,
+	startDate__c: vars.data.startDate__c default "",
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Consent data exists with the same ID?" doc:id="ff40a719-6aaa-413b-bc74-b359900ceb93" >
+			<when expression="#[!isEmpty(payload)]">
+				<salesforce:update doc:name="Update" doc:id="008fea83-5350-456e-ac5f-4d14f3267cc5" config-ref="Salesforce_Config" type="Usage__c">
+				</salesforce:update>
+				<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	"message": "consent record with SCA ID, "++ vars.SCA_ID as String ++ " updated successfully!"&#10;}]' doc:name="Update response" doc:id="d0df1659-e670-4921-92f3-a30c95138533" />
+				<logger level="INFO" doc:name="Update response console" doc:id="6f06dff9-2898-4b81-8ca4-eec8732a6825" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	"message": "consent record with "++ vars.SCA_ID as String ++ " updated successfully!"&#10;}]' />
+			
+</when>
+			<otherwise >
+				<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	"message": "No consent record found with SCA ID, "++ vars.SCA_ID as String&#10;}]' doc:name="No record response" doc:id="00a5a188-f18a-4d4c-ac7a-da7a4721b9c5" />
+				<logger level="INFO" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	"message": "No consent record found with "++ vars.SCA_ID as String&#10;}]' doc:name="No record response console"/>
+			</otherwise>
+		</choice>
+		<error-handler ref="global-config-error-handler" />
+	</flow>
+	
+	</mule>

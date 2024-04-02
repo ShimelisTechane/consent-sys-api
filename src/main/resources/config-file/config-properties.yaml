@@ -1,0 +1,12 @@
+db:
+  host: "localhost"
+  port: "3307"
+  user: "root"
+  password: "root"
+  database: "cpconsent"
+ 
+salesforce:
+  username: "naoledosa-kbjg@force.com"
+  password: "Kenate@mom123"
+  token: "9lyGiWA7DWNDWppomMR5RJLT"
+  authorization: ""
